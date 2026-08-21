@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CitrusCount Pro — Precision Satellite Orange Tree Analytics</title>
+  
+  <!-- Modern Typography: Plus Jakarta Sans + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet & Leaflet Draw CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon-wrapper">
+          <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9" stroke="#f59e0b" fill="rgba(245, 158, 11, 0.15)"/>
+            <path d="M12 3c0 3-2 5-5 5" stroke="#10b981" stroke-linecap="round"/>
+            <path d="M12 3c0 3 2 5 5 5" stroke="#10b981" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title-row">
+            <h1 class="brand-title">CitrusCount</h1>
+            <span class="pro-badge">PRO v2.0</span>
+          </div>
+          <p class="brand-subtitle">High-Resolution Geospatial Orchard Intelligence</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="control-group">
+          <label class="control-label">Sensitivity</label>
+          <div class="slider-wrapper">
+            <input type="range" id="sensitivitySlider" min="0.1" max="0.9" step="0.05" value="0.5">
+            <span id="sensitivityLabel" class="slider-value">Balanced</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Satellite Feed</label>
+          <select id="providerSelect" class="custom-select">
+            <option value="google">Google Satellite HD</option>
+            <option value="google_hybrid">Google Hybrid</option>
+            <option value="esri">ESRI World Imagery</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Citrus Belts</label>
+          <select id="presetSelect" class="custom-select">
+            <option value="nagpur">Nagpur / Katol (Maharashtra)</option>
+            <option value="warud">Warud / Morshi (Vidarbha)</option>
+            <option value="abohar">Abohar / Fazilka (Punjab)</option>
+            <option value="jhalawar">Jhalawar (Rajasthan)</option>
+            <option value="coorg">Coorg (Karnataka)</option>
+          </select>
+        </div>
+
+        <div class="header-actions">
+          <button id="resetBtn" class="btn btn-ghost" title="Clear all markings">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Reset
+          </button>
+          <button id="analyzeBtn" class="btn btn-primary">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Run Detection
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="app-workspace">
+      
+      <!-- Left Panel: Interactive Satellite Map -->
+      <section class="workspace-panel map-panel">
+        <div class="panel-header">
+          <div class="header-status-group">
+            <span class="status-indicator"></span>
+            <span class="panel-instruction">Outline orchard boundary or search GPS coordinates</span>
+          </div>
+          
+          <div class="map-actions-group">
+            <div class="search-input-wrapper">
+              <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="coordInput" placeholder="Lat, Lon" value="21.2787, 78.5866">
+              <button id="jumpCoordBtn" class="btn-inline-action">Go</button>
+            </div>
+            
+            <button id="toggleOverlayBtn" class="btn btn-sm btn-panel" title="Compare raw imagery vs detected tree rings">
+              <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Toggle Rings
+            </button>
+            
+            <button id="editModeBtn" class="btn btn-sm btn-panel" title="Click tree rings to delete or click map to add trees">
+              <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+              Edit Markings
+            </button>
+          </div>
+        </div>
+
+        <div class="map-container-wrapper">
+          <div id="map" class="map-view"></div>
+          
+          <div id="editModeBanner" class="edit-mode-banner" style="display:none;">
+            <svg class="banner-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>Interactive Edit Mode Active: Click any circle to remove, click tree crown on map to add</span>
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <div class="footer-status-item">
+            <span id="boundaryStatus" class="chip chip-idle">Ready &bull; Draw plot on map</span>
+          </div>
+          <div class="footer-meta-item">
+            <span id="zoomIndicator">Zoom 18 &bull; Google HD Imagery</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Orchard Intelligence Analytics -->
+      <section class="workspace-panel analytics-panel">
+        <div class="panel-header analytics-header">
+          <div class="header-status-group">
+            <h2 class="panel-title">Orchard Intelligence</h2>
+            <span id="analysisTimestamp" class="timestamp-badge">Awaiting Analysis</span>
+          </div>
+          <div class="panel-header-actions">
+            <button id="exportCsvBtn" class="btn btn-sm btn-success" style="display:none;">
+              <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="analytics-scroll-body">
+          
+          <!-- Primary Metric Cards -->
+          <div class="metrics-grid">
+            <div class="metric-card card-primary">
+              <div class="metric-header">
+                <span class="metric-label">Total Orange Trees</span>
+                <span id="densityBadge" class="metric-pill">Commercial</span>
+              </div>
+              <div class="metric-value-row">
+                <span id="kpiTrees" class="metric-number">0</span>
+                <span class="metric-unit">trees</span>
+              </div>
+              <div class="metric-sub" id="kpiDensity">Density: 0 trees/ha</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Plot Area</span>
+                <span class="metric-pill neutral">GIS</span>
+              </div>
+              <div class="metric-value-row">
+                <span id="kpiArea" class="metric-number">0.00</span>
+                <span class="metric-unit">ha</span>
+              </div>
+              <div class="metric-sub">Calculated Hectares</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Vacant Gaps</span>
+                <span class="metric-pill danger">Replant</span>
+              </div>
+              <div class="metric-value-row">
+                <span id="kpiGaps" class="metric-number">0</span>
+                <span class="metric-unit">spots</span>
+              </div>
+              <div class="metric-sub">Missing tree nodes</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Canopy Health</span>
+                <span class="metric-pill success">VARI</span>
+              </div>
+              <div class="metric-value-row">
+                <span id="kpiHealth" class="metric-number">--%</span>
+              </div>
+              <div class="metric-sub" id="kpiHealthLabel">Vegetation Index</div>
+            </div>
+          </div>
+
+          <!-- Production & Valuation Card -->
+          <div class="analytics-card economics-card">
+            <div class="card-section-title">
+              <svg class="section-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              Estimated Production & Valuation
+            </div>
+            <div class="economics-grid">
+              <div class="econ-item">
+                <span class="econ-label">Estimated Annual Yield</span>
+                <div id="valYield" class="econ-value">0.00 tons</div>
+                <span class="econ-sub">Based on ~55 kg/tree regional average</span>
+              </div>
+              <div class="econ-item highlight-item">
+                <span class="econ-label">Estimated Farmgate Value</span>
+                <div id="valRevenue" class="econ-value revenue-val">₹0.00</div>
+                <span class="econ-sub">At ₹35/kg Mandi benchmark rate</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seasonal Harvest Distribution -->
+          <div class="analytics-card table-card">
+            <div class="card-section-title">
+              <svg class="section-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Seasonal Harvest Schedule
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Season Window</th>
+                  <th>Share</th>
+                  <th>Est. Yield</th>
+                  <th>Est. Revenue</th>
+                </tr>
+              </thead>
+              <tbody id="seasonalTableBody">
+                <tr>
+                  <td>Early Harvest (Oct - Dec)</td>
+                  <td><span class="table-pill">25%</span></td>
+                  <td>0.00 tons</td>
+                  <td class="table-currency">₹0.00</td>
+                </tr>
+                <tr>
+                  <td>Peak Harvest (Jan - Mar)</td>
+                  <td><span class="table-pill primary">55%</span></td>
+                  <td>0.00 tons</td>
+                  <td class="table-currency">₹0.00</td>
+                </tr>
+                <tr>
+                  <td>Late Season (Apr - May)</td>
+                  <td><span class="table-pill">20%</span></td>
+                  <td>0.00 tons</td>
+                  <td class="table-currency">₹0.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Saliency Image Preview -->
+          <div class="analytics-card preview-card">
+            <div class="card-section-title">
+              <svg class="section-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              Multi-Scale Saliency Heatmap
+            </div>
+            <div id="previewContainer" class="preview-box">
+              <span class="placeholder-text">Run detection to generate full-spectrum canopy elevation map</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
